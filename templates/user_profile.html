@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.username }} 的主页{% endblock %}
+{% block content %}
+<div class="main-container">
+  <!-- 个人信息头部 -->
+  <div class="profile-header">
+    <div class="profile-avatar-wrap">
+      {% if profile_user.avatar %}
+      <img src="{{ profile_user.avatar }}" alt="{{ profile_user.username }}" class="profile-avatar user-avatar">
+      {% else %}
+      <div class="profile-avatar-placeholder">{{ profile_user.username[0].upper() }}</div>
+      {% endif %}
+    </div>
+    <div class="profile-info">
+      <div class="profile-username">{{ profile_user.username }}</div>
+      {% if profile_user.is_admin %}
+      <span class="profile-badge badge-admin">👑 管理员</span>
+      {% endif %}
+      {% if profile_user.is_banned %}
+      <span class="profile-badge badge-banned">🚫 已封禁</span>
+      {% endif %}
+      <p class="profile-bio">{{ profile_user.bio or '这个人很神秘，什么都没有留下...' }}</p>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-number">{{ post_count }}</div>
+          <div class="profile-stat-label">帖子</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-number">{{ reply_count }}</div>
+          <div class="profile-stat-label">回复</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-number">{{ profile_user.created_at[:10] }}</div>
+          <div class="profile-stat-label">注册日期</div>
+        </div>
+      </div>
+    </div>
+    {% if current_user and current_user.id == profile_user.id %}
+    <div style="flex-shrink:0;">
+      <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary btn-sm">⚙️ 编辑资料</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 帖子列表 -->
+  <div class="page-header">
+    <div class="page-title">📄 TA 的帖子</div>
+  </div>
+
+  {% if posts %}
+  <div class="post-list">
+    {% for post in posts %}
+    <div class="post-item">
+      <div class="post-content">
+        <a href="{{ url_for('post_detail', post_id=post.id) }}" class="post-title">{{ post.title }}</a>
+        <div class="post-preview">{{ post.content[:100] }}{% if post.content|length > 100 %}...{% endif %}</div>
+        <div class="post-meta">
+          {% if post.category_name %}
+          <span class="category-badge">{{ post.category_icon }} {{ post.category_name }}</span>
+          {% endif %}
+          <span>🕐 {{ post.created_at[:16] }}</span>
+          <span>💬 {{ post.reply_count }}</span>
+        </div>
+      </div>
+      {% if current_user and current_user.id == profile_user.id %}
+      <div style="display:flex; gap:6px; flex-shrink:0; align-items:center;">
+        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-secondary btn-sm">✏️</a>
+        <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}" id="del-profile-{{ post.id }}">
+          <button type="button" class="btn btn-danger btn-sm"
+                  data-confirm="确定要删除帖子「{{ post.title }}」吗？"
+                  data-title="删除帖子"
+                  data-form-id="del-profile-{{ post.id }}">🗑️</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📭</div>
+    <h3>还没有发布过帖子</h3>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
