@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}帖子管理{% endblock %}
+{% block content %}
+<div class="main-container">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-nav-title">管理面板</div>
+      <a href="{{ url_for('admin_index') }}" class="admin-nav-link">
+        <span class="nav-icon">📊</span> 控制台
+      </a>
+      <a href="{{ url_for('admin_users') }}" class="admin-nav-link">
+        <span class="nav-icon">👥</span> 用户管理
+      </a>
+      <a href="{{ url_for('admin_posts') }}" class="admin-nav-link active">
+        <span class="nav-icon">📄</span> 帖子管理
+      </a>
+      <a href="{{ url_for('admin_categories') }}" class="admin-nav-link">
+        <span class="nav-icon">📂</span> 分类管理
+      </a>
+      <div style="border-top:1px solid var(--border); margin:12px 0;"></div>
+      <a href="{{ url_for('index') }}" class="admin-nav-link">
+        <span class="nav-icon">🏠</span> 返回前台
+      </a>
+    </aside>
+
+    <div class="admin-content">
+      <div class="admin-page-title">📄 帖子管理</div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>标题</th>
+              <th>作者</th>
+              <th>分类</th>
+              <th>状态</th>
+              <th>发布时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for post in posts %}
+            <tr>
+              <td style="color:var(--text-muted);">#{{ post.id }}</td>
+              <td>
+                <a href="{{ url_for('post_detail', post_id=post.id) }}" style="color:var(--primary-light); text-decoration:none; font-size:0.9rem;">
+                  {{ post.title[:30] }}{% if post.title|length > 30 %}...{% endif %}
+                </a>
+              </td>
+              <td style="font-size:0.85rem;">{{ post.username }}</td>
+              <td style="font-size:0.82rem; color:var(--text-muted);">{{ post.category_name or '未分类' }}</td>
+              <td>
+                {% if post.is_deleted %}
+                <span class="badge badge-danger">已删除</span>
+                {% else %}
+                <span class="badge badge-success">正常</span>
+                {% endif %}
+              </td>
+              <td style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">{{ post.created_at[:10] }}</td>
+              <td>
+                {% if post.is_deleted %}
+                <form method="post" action="{{ url_for('admin_restore_post', post_id=post.id) }}" style="display:inline;" id="restore-{{ post.id }}">
+                  <button type="button" class="btn btn-success btn-sm"
+                          data-confirm="确定恢复帖子「{{ post.title[:20] }}」？"
+                          data-title="恢复帖子"
+                          data-form-id="restore-{{ post.id }}">✅ 恢复</button>
+                </form>
+                {% else %}
+                <form method="post" action="{{ url_for('admin_delete_post', post_id=post.id) }}" style="display:inline;" id="adel-{{ post.id }}">
+                  <button type="button" class="btn btn-danger btn-sm"
+                          data-confirm="确定删除帖子「{{ post.title[:20] }}」？"
+                          data-title="删除帖子"
+                          data-form-id="adel-{{ post.id }}">🗑️ 删除</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if total_pages > 1 %}
+      <div class="pagination" style="margin-top:20px;">
+        {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('admin_posts', page=p) }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
