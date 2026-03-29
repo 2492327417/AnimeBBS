@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}编辑个人资料{% endblock %}
+{% block content %}
+<div class="main-container" style="max-width:600px;">
+  <div class="page-header">
+    <div class="page-title">⚙️ 编辑个人资料</div>
+    <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="btn btn-secondary btn-sm">← 返回主页</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="post" action="{{ url_for('edit_profile') }}">
+        <!-- 头像 -->
+        <div class="form-group" style="text-align:center; margin-bottom:24px;">
+          {% if user.avatar %}
+          <img src="{{ user.avatar }}" alt="头像" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);margin-bottom:12px;" class="user-avatar">
+          {% else %}
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#ff4081);display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;color:white;margin:0 auto 12px;">{{ user.username[0].upper() }}</div>
+          {% endif %}
+          <div style="font-weight:600; font-size:1.1rem;">{{ user.username }}</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">头像 URL</label>
+          <input type="url" name="avatar" class="form-control" value="{{ user.avatar or '' }}" 
+                 placeholder="输入图片URL（如：https://example.com/avatar.jpg）">
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">支持任意图片URL，留空则显示默认头像</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">个人简介</label>
+          <textarea name="bio" class="form-control" rows="4" 
+                    placeholder="介绍一下自己，最多200字..."
+                    data-maxlength="200" data-counter="bio-counter">{{ user.bio or '' }}</textarea>
+          <div style="text-align:right; margin-top:4px;">
+            <span id="bio-counter" style="font-size:0.75rem; color:var(--text-muted);">{{ (user.bio or '')|length }} / 200</span>
+          </div>
+        </div>
+
+        <div class="rainbow-divider"></div>
+
+        <div style="margin-bottom:6px; font-size:0.9rem; font-weight:600;">🔒 修改密码（可选）</div>
+
+        <div class="form-group">
+          <label class="form-label">新密码</label>
+          <input type="password" name="new_password" class="form-control" placeholder="留空则不修改密码">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">确认新密码</label>
+          <input type="password" name="confirm_password" class="form-control" placeholder="再次输入新密码">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:24px;">
+          <button type="submit" class="btn btn-primary btn-lg">💾 保存资料</button>
+          <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="btn btn-secondary btn-lg">取消</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
