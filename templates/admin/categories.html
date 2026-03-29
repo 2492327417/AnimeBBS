@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}分类管理{% endblock %}
+{% block content %}
+<div class="main-container">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-nav-title">管理面板</div>
+      <a href="{{ url_for('admin_index') }}" class="admin-nav-link">
+        <span class="nav-icon">📊</span> 控制台
+      </a>
+      <a href="{{ url_for('admin_users') }}" class="admin-nav-link">
+        <span class="nav-icon">👥</span> 用户管理
+      </a>
+      <a href="{{ url_for('admin_posts') }}" class="admin-nav-link">
+        <span class="nav-icon">📄</span> 帖子管理
+      </a>
+      <a href="{{ url_for('admin_categories') }}" class="admin-nav-link active">
+        <span class="nav-icon">📂</span> 分类管理
+      </a>
+      <div style="border-top:1px solid var(--border); margin:12px 0;"></div>
+      <a href="{{ url_for('index') }}" class="admin-nav-link">
+        <span class="nav-icon">🏠</span> 返回前台
+      </a>
+    </aside>
+
+    <div class="admin-content">
+      <div class="admin-page-title">📂 分类管理</div>
+
+      <!-- 添加分类表单 -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <h3>➕ 添加新分类</h3>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('add_category') }}" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+            <div class="form-group" style="margin:0; flex:0 0 80px;">
+              <label class="form-label">图标</label>
+              <input type="text" name="icon" class="form-control" value="📌" maxlength="4" style="text-align:center; font-size:1.2rem;">
+            </div>
+            <div class="form-group" style="margin:0; flex:1; min-width:150px;">
+              <label class="form-label">分类名称 <span style="color:var(--danger)">*</span></label>
+              <input type="text" name="name" class="form-control" placeholder="分类名称" required maxlength="20">
+            </div>
+            <div class="form-group" style="margin:0; flex:2; min-width:200px;">
+              <label class="form-label">描述</label>
+              <input type="text" name="description" class="form-control" placeholder="分类描述（选填）" maxlength="100">
+            </div>
+            <button type="submit" class="btn btn-primary" style="flex-shrink:0;">➕ 添加分类</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- 分类列表 -->
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>图标</th>
+              <th>名称</th>
+              <th>描述</th>
+              <th>帖子数</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cat in categories %}
+            <!-- 展示行 -->
+            <tr id="view-row-{{ cat.id }}">
+              <td style="color:var(--text-muted);">#{{ cat.id }}</td>
+              <td style="font-size:1.3rem; text-align:center;">{{ cat.icon }}</td>
+              <td style="font-weight:500;">{{ cat.name }}</td>
+              <td style="font-size:0.85rem; color:var(--text-muted);">{{ cat.description or '-' }}</td>
+              <td>{{ cat.post_count }}</td>
+              <td>
+                <button class="btn btn-secondary btn-sm edit-category-btn" data-row="{{ cat.id }}">✏️ 编辑</button>
+                <form method="post" action="{{ url_for('delete_category', cat_id=cat.id) }}" style="display:inline;" id="delcat-{{ cat.id }}">
+                  <button type="button" class="btn btn-danger btn-sm"
+                          data-confirm="确定删除分类「{{ cat.name }}」？该分类下的帖子将变为未分类。"
+                          data-title="删除分类"
+                          data-form-id="delcat-{{ cat.id }}">🗑️ 删除</button>
+                </form>
+              </td>
+            </tr>
+            <!-- 编辑行 -->
+            <tr id="edit-row-{{ cat.id }}" style="display:none; background: rgba(124,77,255,0.05);">
+              <td colspan="6" style="padding:16px;">
+                <form method="post" action="{{ url_for('edit_category', cat_id=cat.id) }}" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+                  <div class="form-group" style="margin:0; flex:0 0 80px;">
+                    <label class="form-label">图标</label>
+                    <input type="text" name="icon" class="form-control" value="{{ cat.icon }}" maxlength="4" style="text-align:center; font-size:1.2rem;">
+                  </div>
+                  <div class="form-group" style="margin:0; flex:1; min-width:150px;">
+                    <label class="form-label">名称</label>
+                    <input type="text" name="name" class="form-control" value="{{ cat.name }}" required maxlength="20">
+                  </div>
+                  <div class="form-group" style="margin:0; flex:2; min-width:200px;">
+                    <label class="form-label">描述</label>
+                    <input type="text" name="description" class="form-control" value="{{ cat.description }}" maxlength="100">
+                  </div>
+                  <div style="display:flex; gap:8px;">
+                    <button type="submit" class="btn btn-primary btn-sm">💾 保存</button>
+                    <button type="button" class="btn btn-secondary btn-sm cancel-edit-btn" data-row="{{ cat.id }}">取消</button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
