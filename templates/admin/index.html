@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}管理后台{% endblock %}
+{% block content %}
+<div class="main-container">
+  <div class="admin-layout">
+    <!-- 侧边导航 -->
+    <aside class="admin-sidebar">
+      <div class="admin-nav-title">管理面板</div>
+      <a href="{{ url_for('admin_index') }}" class="admin-nav-link">
+        <span class="nav-icon">📊</span> 控制台
+      </a>
+      <a href="{{ url_for('admin_users') }}" class="admin-nav-link">
+        <span class="nav-icon">👥</span> 用户管理
+      </a>
+      <a href="{{ url_for('admin_posts') }}" class="admin-nav-link">
+        <span class="nav-icon">📄</span> 帖子管理
+      </a>
+      <a href="{{ url_for('admin_categories') }}" class="admin-nav-link">
+        <span class="nav-icon">📂</span> 分类管理
+      </a>
+      <div style="border-top:1px solid var(--border); margin:12px 0;"></div>
+      <a href="{{ url_for('index') }}" class="admin-nav-link">
+        <span class="nav-icon">🏠</span> 返回前台
+      </a>
+    </aside>
+
+    <!-- 主内容 -->
+    <div class="admin-content">
+      <div class="admin-page-title">📊 控制台总览</div>
+
+      <!-- 统计卡片 -->
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">👥</div>
+          <div class="admin-stat-number">{{ stats.total_users }}</div>
+          <div class="admin-stat-label">注册用户</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">📄</div>
+          <div class="admin-stat-number">{{ stats.total_posts }}</div>
+          <div class="admin-stat-label">发布帖子</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">💬</div>
+          <div class="admin-stat-number">{{ stats.total_replies }}</div>
+          <div class="admin-stat-label">回复总数</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">🚫</div>
+          <div class="admin-stat-number" style="color:var(--danger);">{{ stats.banned_users }}</div>
+          <div class="admin-stat-label">封禁用户</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">📂</div>
+          <div class="admin-stat-number">{{ stats.total_categories }}</div>
+          <div class="admin-stat-label">帖子分类</div>
+        </div>
+      </div>
+
+      <div class="content-grid" style="grid-template-columns: 1fr 1fr;">
+        <!-- 最近帖子 -->
+        <div>
+          <div style="font-size:0.95rem; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px;">📄 最近帖子</div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>标题</th><th>作者</th><th>时间</th></tr>
+              </thead>
+              <tbody>
+                {% for post in recent_posts %}
+                <tr>
+                  <td><a href="{{ url_for('post_detail', post_id=post.id) }}" style="color:var(--primary-light); text-decoration:none; font-size:0.85rem;">{{ post.title[:20] }}{% if post.title|length > 20 %}...{% endif %}</a></td>
+                  <td style="font-size:0.82rem; color:var(--text-muted);">{{ post.username }}</td>
+                  <td style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">{{ post.created_at[:10] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 最近注册用户 -->
+        <div>
+          <div style="font-size:0.95rem; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px;">👤 最近注册</div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>用户名</th><th>状态</th><th>注册时间</th></tr>
+              </thead>
+              <tbody>
+                {% for user in recent_users %}
+                <tr>
+                  <td style="font-size:0.85rem;">
+                    {% if user.is_admin %}👑 {% endif %}{{ user.username }}
+                  </td>
+                  <td>
+                    {% if user.is_banned %}
+                    <span class="badge badge-danger">封禁</span>
+                    {% else %}
+                    <span class="badge badge-success">正常</span>
+                    {% endif %}
+                  </td>
+                  <td style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">{{ user.created_at[:10] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
