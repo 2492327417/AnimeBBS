@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}次元漫谈{% endblock %} - 动漫交流论坛</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="{{ url_for('index') }}" class="navbar-brand">
+      <div class="logo-icon">🌸</div>
+      <span class="logo-text">次元漫谈</span>
+    </a>
+
+    <button class="navbar-toggle" aria-label="菜单">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <ul class="navbar-nav">
+      <li><a href="{{ url_for('index') }}">🏠 首页</a></li>
+      {% for cat in all_categories %}
+      <li><a href="{{ url_for('index', category=cat.id) }}">{{ cat.icon }} {{ cat.name }}</a></li>
+      {% endfor %}
+      {% if current_user %}
+        <li><a href="{{ url_for('new_post') }}" class="btn-nav-primary">✏️ 发帖</a></li>
+        <li><a href="{{ url_for('user_profile', user_id=current_user.id) }}">
+          {% if current_user.avatar %}
+            <img src="{{ current_user.avatar }}" alt="头像" class="user-avatar-nav" style="vertical-align:middle;">
+          {% else %}
+            <span class="user-avatar-placeholder">{{ current_user.username[0].upper() }}</span>
+          {% endif %}
+          &nbsp;{{ current_user.username }}
+        </a></li>
+        {% if current_user.is_admin %}
+        <li><a href="{{ url_for('admin_index') }}">⚙️ 管理</a></li>
+        {% endif %}
+        <li>
+          <form action="{{ url_for('logout') }}" method="get" style="display:inline;">
+            <button type="submit">🚪 退出</button>
+          </form>
+        </li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}">🔑 登录</a></li>
+        <li><a href="{{ url_for('register') }}" class="btn-nav-primary">📝 注册</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<!-- Flash 消息 -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">
+      <span>
+        {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+        {{ message }}
+      </span>
+      <button class="alert-close">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<!-- 主内容 -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- 确认模态框 -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">确认操作</div>
+    <div class="modal-body" id="modal-body">确定要执行此操作吗？</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="modal-cancel">取消</button>
+      <button class="btn btn-danger" id="modal-confirm">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <p>🌸 次元漫谈 &nbsp;|&nbsp; 二次元爱好者的精神家园 &nbsp;|&nbsp; © 2024</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>
