@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}编辑帖子{% endblock %}
+{% block content %}
+<div class="main-container" style="max-width:800px;">
+  <div class="page-header">
+    <div class="page-title">✏️ 编辑帖子</div>
+    <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-secondary btn-sm">← 返回帖子</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="post" action="{{ url_for('edit_post', post_id=post.id) }}">
+        <div class="form-group">
+          <label class="form-label">帖子标题 <span style="color:var(--danger)">*</span></label>
+          <input type="text" name="title" class="form-control" value="{{ post.title }}"
+                 required maxlength="100" data-maxlength="100" data-counter="title-counter">
+          <div style="text-align:right; margin-top:4px;">
+            <span id="title-counter" style="font-size:0.75rem; color:var(--text-muted);">{{ post.title|length }} / 100</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">所属版块</label>
+          <select name="category_id" class="form-control">
+            <option value="">-- 请选择版块 --</option>
+            {% for cat in all_categories %}
+            <option value="{{ cat.id }}" {% if post.category_id == cat.id %}selected{% endif %}>{{ cat.icon }} {{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">帖子内容 <span style="color:var(--danger)">*</span></label>
+          <textarea name="content" class="form-control" rows="14" required
+                    data-maxlength="10000" data-counter="content-counter">{{ post.content }}</textarea>
+          <div style="text-align:right; margin-top:4px;">
+            <span id="content-counter" style="font-size:0.75rem; color:var(--text-muted);">{{ post.content|length }} / 10000</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button type="submit" class="btn btn-primary btn-lg">💾 保存修改</button>
+          <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-secondary btn-lg">取消</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
