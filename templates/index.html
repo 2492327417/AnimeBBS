@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}首页{% endblock %}
+
+{% block content %}
+<div class="main-container">
+  <!-- 顶部 Banner -->
+  <div class="card" style="margin-bottom:20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-color: rgba(124,77,255,0.3); overflow:hidden; position:relative;">
+    <div style="padding:28px 30px; position:relative; z-index:1;">
+      <h1 style="font-size:1.8rem; font-weight:800; margin-bottom:8px;">
+        <span style="background: linear-gradient(135deg, #7c4dff, #ff4081); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">🌸 次元漫谈</span>
+      </h1>
+      <p style="color:var(--text-secondary); margin-bottom:16px;">二次元爱好者的精神家园 · 分享动漫的每一个瞬间</p>
+      <div style="display:flex; gap:24px; flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div style="font-size:1.3rem; font-weight:700; color:#b47cff;">{{ total_posts }}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">帖子</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.3rem; font-weight:700; color:#ff80ab;">{{ total_users }}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">成员</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.3rem; font-weight:700; color:#80f4ff;">{{ total_replies }}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">回复</div>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute; right:-10px; top:-10px; font-size:8rem; opacity:0.05; user-select:none;">🌸</div>
+  </div>
+
+  <div class="content-grid">
+    <!-- 左侧主内容 -->
+    <div class="main-col">
+      <!-- 筛选栏 -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <a href="{{ url_for('index') }}" class="btn btn-sm {% if not current_category and not search_query %}btn-primary{% else %}btn-secondary{% endif %}">全部</a>
+          {% for cat in all_categories %}
+          <a href="{{ url_for('index', category=cat.id) }}" class="btn btn-sm {% if current_category == cat.id %}btn-primary{% else %}btn-secondary{% endif %}">{{ cat.icon }} {{ cat.name }}</a>
+          {% endfor %}
+        </div>
+        {% if current_user %}
+        <a href="{{ url_for('new_post') }}" class="btn btn-primary btn-sm">✏️ 发新帖</a>
+        {% endif %}
+      </div>
+
+      <!-- 搜索框 -->
+      <form method="get" class="search-bar" style="margin-bottom:16px;">
+        {% if current_category %}
+        <input type="hidden" name="category" value="{{ current_category }}">
+        {% endif %}
+        <div class="search-input" style="position:relative; flex:1;">
+          <input type="text" name="q" value="{{ search_query }}" placeholder="搜索帖子标题或内容..." class="form-control" style="padding-right:40px;">
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 搜索</button>
+        {% if search_query %}
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">✕ 清除</a>
+        {% endif %}
+      </form>
+
+      <!-- 帖子列表 -->
+      {% if posts %}
+      <div class="post-list">
+        {% for post in posts %}
+        <div class="post-item">
+          <!-- 头像 -->
+          {% if post.avatar %}
+          <img src="{{ post.avatar }}" alt="{{ post.username }}" class="post-avatar user-avatar">
+          <div class="post-avatar-placeholder avatar-placeholder-fallback" style="display:none;">{{ post.username[0].upper() }}</div>
+          {% else %}
+          <div class="post-avatar-placeholder">{{ post.username[0].upper() }}</div>
+          {% endif %}
+
+          <!-- 内容 -->
+          <div class="post-content">
+            <a href="{{ url_for('post_detail', post_id=post.id) }}" class="post-title">{{ post.title }}</a>
+            <div class="post-preview">{{ post.content[:120] }}{% if post.content|length > 120 %}...{% endif %}</div>
+            <div class="post-meta">
+              <a href="{{ url_for('user_profile', user_id=post.user_id) }}" style="color:var(--primary-light); text-decoration:none;">👤 {{ post.username }}</a>
+              {% if post.category_name %}
+              <a href="{{ url_for('index', category=post.category_id) }}" class="category-badge">{{ post.category_icon }} {{ post.category_name }}</a>
+              {% endif %}
+              <span>🕐 {{ post.created_at[:16] }}</span>
+            </div>
+          </div>
+
+          <!-- 右侧统计 -->
+          <div class="post-stats">
+            <span>💬 {{ post.reply_count }} 回复</span>
+            <span>👁 {{ post.view_count }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- 分页 -->
+      {% if total_pages > 1 %}
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="{{ url_for('index', page=page-1, category=current_category, q=search_query) }}" class="page-btn">‹</a>
+        {% else %}
+        <span class="page-btn disabled">‹</span>
+        {% endif %}
+
+        {% for p in range([1, page-2]|max, [total_pages+1, page+3]|min) %}
+        <a href="{{ url_for('index', page=p, category=current_category, q=search_query) }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+
+        {% if page < total_pages %}
+        <a href="{{ url_for('index', page=page+1, category=current_category, q=search_query) }}" class="page-btn">›</a>
+        {% else %}
+        <span class="page-btn disabled">›</span>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🌙</div>
+        <h3>暂时还没有帖子</h3>
+        <p>成为第一个发帖的人吧！</p>
+        {% if current_user %}
+        <a href="{{ url_for('new_post') }}" class="btn btn-primary" style="margin-top:16px;">✏️ 发布第一帖</a>
+        {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary" style="margin-top:16px;">📝 注册后发帖</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- 右侧边栏 -->
+    <div class="sidebar-col">
+      <!-- 用户信息/登录入口 -->
+      {% if current_user %}
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">👤 我的账号</div>
+        <div class="sidebar-card-body">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+            {% if current_user.avatar %}
+            <img src="{{ current_user.avatar }}" alt="头像" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">
+            {% else %}
+            <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#ff4081);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:white;border:2px solid var(--primary);">{{ current_user.username[0].upper() }}</div>
+            {% endif %}
+            <div>
+              <div style="font-weight:600;">{{ current_user.username }}</div>
+              {% if current_user.is_admin %}<div class="badge badge-primary" style="font-size:0.7rem;">👑 管理员</div>{% endif %}
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <a href="{{ url_for('new_post') }}" class="btn btn-primary btn-sm">✏️ 发新帖</a>
+            <a href="{{ url_for('my_posts') }}" class="btn btn-secondary btn-sm">📄 我的帖子</a>
+            <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary btn-sm">⚙️ 编辑资料</a>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">🌸 加入次元漫谈</div>
+        <div class="sidebar-card-body">
+          <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:14px;">登录后即可发帖、回复，与更多动漫爱好者交流！</p>
+          <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm btn-block" style="margin-bottom:8px;">🔑 立即登录</a>
+          <a href="{{ url_for('register') }}" class="btn btn-secondary btn-sm btn-block">📝 免费注册</a>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- 热门帖子 -->
+      {% if hot_posts %}
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">🔥 热门帖子</div>
+        <div class="sidebar-card-body">
+          {% for hp in hot_posts %}
+          <a href="{{ url_for('post_detail', post_id=hp.id) }}" class="hot-post-item">
+            <span class="hot-rank {% if loop.index == 1 %}top1{% elif loop.index == 2 %}top2{% elif loop.index == 3 %}top3{% endif %}">{{ loop.index }}</span>
+            <span class="hot-post-title">{{ hp.title }}</span>
+            <span style="font-size:0.75rem; color:var(--text-muted); flex-shrink:0;">{{ hp.reply_count }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- 分类导航 -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">📂 版块分类</div>
+        <div class="sidebar-card-body" style="padding:8px;">
+          <ul class="category-list">
+            <li><a href="{{ url_for('index') }}" class="{% if not current_category %}active{% endif %}">
+              🗂️ 全部帖子
+            </a></li>
+            {% for cat in all_categories %}
+            <li><a href="{{ url_for('index', category=cat.id) }}" class="{% if current_category == cat.id %}active{% endif %}">
+              {{ cat.icon }} {{ cat.name }}
+            </a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}{% endblock %}
