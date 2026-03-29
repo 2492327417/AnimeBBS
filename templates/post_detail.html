@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="main-container">
+  <!-- 面包屑 -->
+  <div style="margin-bottom:16px; font-size:0.85rem; color:var(--text-muted); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+    <a href="{{ url_for('index') }}" style="color:var(--primary-light); text-decoration:none;">🏠 首页</a>
+    <span>›</span>
+    {% if post.category_id %}
+    <a href="{{ url_for('index', category=post.category_id) }}" style="color:var(--primary-light); text-decoration:none;">{{ post.category_icon }} {{ post.category_name }}</a>
+    <span>›</span>
+    {% endif %}
+    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:300px;">{{ post.title }}</span>
+  </div>
+
+  <div class="content-grid">
+    <!-- 主内容 -->
+    <div>
+      <!-- 帖子主体 -->
+      <div class="post-detail-card">
+        <div class="post-detail-header">
+          <div class="post-detail-title">{{ post.title }}</div>
+          <div class="post-detail-meta">
+            <a href="{{ url_for('user_profile', user_id=post.user_id) }}" class="post-author-info">
+              {% if post.avatar %}
+              <img src="{{ post.avatar }}" alt="{{ post.username }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);" class="user-avatar">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#ff4081);display:none;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:white;" class="avatar-placeholder-fallback">{{ post.username[0].upper() }}</div>
+              {% else %}
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#ff4081);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:white;">{{ post.username[0].upper() }}</div>
+              {% endif %}
+              <span>{{ post.username }}</span>
+            </a>
+            {% if post.category_name %}
+            <a href="{{ url_for('index', category=post.category_id) }}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;background:rgba(124,77,255,0.2);color:var(--primary-light);font-size:0.8rem;text-decoration:none;">{{ post.category_icon }} {{ post.category_name }}</a>
+            {% endif %}
+            <span>🕐 {{ post.created_at[:16] }}</span>
+            {% if post.updated_at and post.updated_at != post.created_at %}
+            <span style="font-size:0.78rem; color:var(--text-muted);">✏️ 已编辑</span>
+            {% endif %}
+            <span>👁 {{ post.view_count }} 浏览</span>
+          </div>
+        </div>
+        <div class="post-detail-body">{{ post.content }}</div>
+
+        <!-- 操作按钮 -->
+        {% if current_user and (current_user.id == post.user_id or current_user.is_admin) %}
+        <div style="padding:12px 24px; border-top:1px solid var(--border); display:flex; gap:8px;">
+          {% if current_user.id == post.user_id or current_user.is_admin %}
+          <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-secondary btn-sm">✏️ 编辑</a>
+          {% endif %}
+          <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}">
+            <button type="button" class="btn btn-danger btn-sm"
+                    data-confirm="确定要删除这篇帖子吗？删除后无法恢复。"
+                    data-title="删除帖子"
+                    data-form-id="delete-post-form-{{ post.id }}">
+              🗑️ 删除
+            </button>
+          </form>
+          <form id="delete-post-form-{{ post.id }}" method="post" action="{{ url_for('delete_post', post_id=post.id) }}" style="display:none;"></form>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- 回复区域 -->
+      <div id="replies" class="reply-section">
+        <div class="reply-section-title" style="font-size:1rem; font-weight:700; padding:16px 0 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px;">
+          💬 全部回复 <span style="font-size:0.85rem; color:var(--text-muted); font-weight:400;">（{{ replies|length }} 条）</span>
+        </div>
+
+        {% if replies %}
+        <div class="reply-list" style="margin-top:16px;">
+          {% for reply in replies %}
+          <div class="reply-item">
+            {% if reply.avatar %}
+            <img src="{{ reply.avatar }}" alt="{{ reply.username }}" class="reply-item-avatar user-avatar">
+            <div class="reply-item-avatar-placeholder avatar-placeholder-fallback" style="display:none;">{{ reply.username[0].upper() }}</div>
+            {% else %}
+            <div class="reply-item-avatar-placeholder">{{ reply.username[0].upper() }}</div>
+            {% endif %}
+            <div class="reply-content-wrap">
+              <div class="reply-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <a href="{{ url_for('user_profile', user_id=reply.user_id) }}" class="reply-author">{{ reply.username }}</a>
+                  <span class="reply-time">{{ reply.created_at[:16] }}</span>
+                </div>
+                {% if current_user and (current_user.id == reply.user_id or current_user.is_admin) %}
+                <div>
+                  <form method="post" action="{{ url_for('delete_reply', reply_id=reply.id) }}" style="display:inline;" id="del-reply-{{ reply.id }}">
+                    <button type="button" class="btn btn-danger btn-sm"
+                            data-confirm="确定要删除这条回复吗？"
+                            data-title="删除回复"
+                            data-form-id="del-reply-{{ reply.id }}">🗑️</button>
+                  </form>
+                </div>
+                {% endif %}
+              </div>
+              <div class="reply-text">{{ reply.content }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:40px 20px; color:var(--text-muted);">
+          <div style="font-size:2rem; margin-bottom:8px;">💭</div>
+          <p>暂无回复，来说说你的看法吧！</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- 回复表单 -->
+      {% if current_user %}
+      <div class="reply-form-card" style="margin-top:20px;">
+        <h3 style="font-size:0.95rem; font-weight:600; margin-bottom:14px;">✍️ 发表回复</h3>
+        <form method="post" action="{{ url_for('add_reply', post_id=post.id) }}">
+          <div class="form-group" style="margin-bottom:14px;">
+            <textarea name="content" class="form-control" rows="5" 
+                      placeholder="写下你的想法... (Ctrl+Enter 快捷提交)" required
+                      data-maxlength="2000" data-counter="reply-counter"></textarea>
+            <div style="text-align:right; margin-top:4px;">
+              <span id="reply-counter" style="font-size:0.75rem; color:var(--text-muted);">0 / 2000</span>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">💬 提交回复</button>
+        </form>
+      </div>
+      {% else %}
+      <div style="text-align:center; padding:24px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); margin-top:20px;">
+        <p style="color:var(--text-secondary); margin-bottom:12px;">登录后才能发表回复</p>
+        <a href="{{ url_for('login', next=request.url) }}" class="btn btn-primary">🔑 登录</a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary" style="margin-left:8px;">📝 注册</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="sidebar-col">
+      <!-- 作者信息 -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">👤 楼主信息</div>
+        <div class="sidebar-card-body" style="text-align:center;">
+          <a href="{{ url_for('user_profile', user_id=post.user_id) }}" style="text-decoration:none; display:block;">
+            {% if post.avatar %}
+            <img src="{{ post.avatar }}" alt="{{ post.username }}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);margin:0 auto 10px;" class="user-avatar">
+            {% else %}
+            <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#ff4081);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:white;margin:0 auto 10px;">{{ post.username[0].upper() }}</div>
+            {% endif %}
+            <div style="font-weight:600; color:var(--primary-light); margin-bottom:6px;">{{ post.username }}</div>
+          </a>
+          {% if post.bio %}
+          <p style="font-size:0.8rem; color:var(--text-muted);">{{ post.bio }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 帖子信息 -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">📊 帖子信息</div>
+        <div class="sidebar-card-body">
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:0.85rem; color:var(--text-secondary);">
+            <div>📅 发布时间：{{ post.created_at[:16] }}</div>
+            <div>👁 浏览次数：{{ post.view_count }}</div>
+            <div>💬 回复数：{{ replies|length }}</div>
+            {% if post.category_name %}
+            <div>📂 所属版块：{{ post.category_icon }} {{ post.category_name }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <a href="{{ url_for('index') }}" class="btn btn-secondary btn-block">← 返回首页</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
